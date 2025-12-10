@@ -1,10 +1,9 @@
 from flask import Blueprint, request, abort, make_response
 from ..db import db
 from ..models.pet import Pet
-import google.generativeai as genai
-import os
+from google import genai
 
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+client = genai.Client()
 
 bp = Blueprint("pets", __name__, url_prefix="/pets")
 
@@ -54,14 +53,14 @@ def get_single_pet(pet_id):
     return pet.to_dict()
 
 def generate_name(request):
-    model = genai.GenerativeModel("gemini-1.5-flash")
-
-    if request["name"]:
+    if "name" in request:
         input_message = f"I have a {request["coloration"]} {request["animal"]} named {request["name"]}. They are very {request["personality"]}. I'm not a huge fan of the name though, could you suggest another? Just the name, nothing else."
     else:
         input_message = f"I have a {request["animal"]} who is {request["coloration"]} and {request["personality"]}. Please give me a name for them? Just the name, nothing else."
 
-    response = model.generate_content(input_message)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=input_message)
     print(response.text)
     return response.text.strip()
 
